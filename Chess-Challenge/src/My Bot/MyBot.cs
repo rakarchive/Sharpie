@@ -66,13 +66,6 @@ public class MyBot : IChessBot
             
             return bestEvaluation;
         }
-        
-        int GetPstIndex(bool pc, int pt, int square)
-        {
-            if (pc == false) square ^= 56;
-            if ((square & 4) != 0) square ^= 7;
-            return (pt - 1) * 32 + (square & 3 | square >> 3 << 2);
-        }
 
         int Evaluate()
         {
@@ -81,8 +74,11 @@ public class MyBot : IChessBot
             {
                 Piece piece = board.GetPiece(new Square(sq));
                 if (piece.PieceType == PieceType.None) continue;
-                int index = GetPstIndex(piece.IsWhite, (int)piece.PieceType, sq);
-                long value = (pst[index / 4] >> ((index & 3) * 16)) & 32767;
+                int mirroredSquare = sq;
+                if (!piece.IsWhite) mirroredSquare ^= 56;
+                if ((sq & 4) != 0) mirroredSquare ^= 7;
+                // WARNING: DO NOT TOUCH THE FORMULA
+                long value = (pst[((int)piece.PieceType - 1) * 8 + (mirroredSquare >> 3)] >> ((mirroredSquare & 3) * 16)) & 32767;
                 if (piece.IsWhite == board.IsWhiteToMove) result += value;
                 else result -= value;
             }
