@@ -4,7 +4,7 @@ using ChessChallenge.API;
 public class MyBot : IChessBot
 {
     
-    public static readonly Int64[] pst =
+    public static readonly long[] pst =
     {
         28147927174348900,    22518470590464105,    28147927174348900,    33777426708562020, 
         35184801592115300,    36592283851161720,    42221890761523350,    28147927174348900, 
@@ -76,13 +76,13 @@ public class MyBot : IChessBot
 
         int Evaluate()
         {
-            Int64 result = 0;
+            long result = 0;
             for (int sq = 0; sq < 64; sq++)
             {
                 Piece piece = board.GetPiece(new Square(sq));
                 if (piece.PieceType == PieceType.None) continue;
                 int index = GetPstIndex(piece.IsWhite, (int)piece.PieceType, sq);
-                Int64 value = (pst[index / 4] >> ((index & 3) * 16)) & 32767;
+                long value = (pst[index / 4] >> ((index & 3) * 16)) & 32767;
                 if (piece.IsWhite == board.IsWhiteToMove) result += value;
                 else result -= value;
             }
