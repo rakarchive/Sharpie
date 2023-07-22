@@ -1,103 +1,75 @@
 ﻿using System;
 using System.Numerics;
 using ChessChallenge.API;
+using ChessChallenge.Application.APIHelpers;
 
 public class MyBot : IChessBot
 {
     public Move Think(Board board, Timer timer)
     {
-        Searcher searcher = new Searcher(board, timer);
-        return searcher.Search();
-    }
+        const int INF = int.MaxValue - 1;
 
-    public class Searcher
-    {
-        private Board board;
-        private Timer timer;
-
-        private Int32 timeToUse;
-
-        private Move overallBestMove;
-        private Int32 overallBestScore;
-        
-        const Int32 EVAL_INF = Int32.MaxValue - 1;
-
-        public Searcher(Board b, Timer t)
-        {
-            board = b;
-            timer = t;
-        }
-
-        public Move Search()
-        {
-            Move bestMove = Move.NullMove;
-            timeToUse = timer.MillisecondsRemaining / 20;
-            for (Int32 depth = 1; timer.MillisecondsElapsedThisTurn < timeToUse; depth++)
-            {
-                try
-                {
-                    Negamax(0, depth, -EVAL_INF, EVAL_INF);
-                }
-                catch
-                {
-                    break;
-                }
-
-                bestMove = overallBestMove;
+        Move bestMove = Move.NullMove;
+        int timeToUse = timer.MillisecondsRemaining / 20;
+        for (int depth = 1; timer.MillisecondsElapsedThisTurn < timeToUse; depth++) {
+            try {
+                Negamax(0, depth, -INF, +INF);
+            } catch {
+                break;
             }
-            return bestMove;
         }
-        
-        public Int32 Negamax(Int32 plys, Int32 depth, Int32 alpha, Int32 beta)
+
+        int Negamax(int ply, int depth, int alpha, int beta)
         {
             if (timer.MillisecondsElapsedThisTurn >= timeToUse)
-                throw new System.TimeoutException();
+                throw new TimeoutException();
             
-            if (board.IsInCheckmate()) return -EVAL_INF + plys;
             if (board.IsDraw()) return 0;
             if (depth <= 0) return Evaluate();
 
-            Int32 bestScore = -Int32.MaxValue + 1;
-            Move bestMove = Move.NullMove;
-
             Move[] moves = board.GetLegalMoves();
-            foreach (Move move in moves)
-            {
+            if (moves.Length == 0) return board.IsInCheck() ? -INF + ply : 0;
+
+            int  bestEvaluation  = -INF         ;
+            Move currentBestMove = Move.NullMove;
+            foreach (Move move in moves) {
                 board.MakeMove(move);
-                Int32 score = -Negamax(plys + 1, depth - 1, -beta, -alpha);
+                int evaluation = -Negamax(ply + 1, depth - 1, -beta, -alpha);
                 board.UndoMove(move);
-
-                if (score > bestScore)
-                {
-                    bestScore = score;
-
-                    if (score > alpha)
-                    {
-                        alpha = score;
-                        bestMove = move;
-
-                        if (plys == 0 && (score > overallBestScore || bestMove == Move.NullMove))
-                        {
-                            overallBestScore = score;
-                            overallBestMove = bestMove;
-                        }
-
-                        if (score >= beta) break;
-                    }
-                }
+                
+                if (evaluation <= bestEvaluation) continue;
+                bestEvaluation  = evaluation;
+                currentBestMove = move;
+                
+                if (evaluation <= alpha) continue;
+                alpha = evaluation;
+                
+                if (evaluation > beta) break;
             }
-        
-            return bestScore;
+            
+            if (ply == 0) bestMove = currentBestMove;
+            
+            return bestEvaluation;
         }
 
-        public Int32 Evaluate()
+        int Evaluate()
         {
+            bool isWhite = board.IsWhiteToMove;
+            bool isBlack = !isWhite           ;
+            return Difference(PieceType.Pawn  ) +
+                   Difference(PieceType.Knight) * 3 +
+                   Difference(PieceType.Bishop) * 3 +
+                   Difference(PieceType.Rook  ) * 5 +
+                   Difference(PieceType.Queen ) * 9 ;
 
-            return BitOperations.PopCount(board.GetPieceBitboard(PieceType.Pawn, board.IsWhiteToMove))       +
-                   BitOperations.PopCount(board.GetPieceBitboard(PieceType.Knight, board.IsWhiteToMove)) * 3 +
-                   BitOperations.PopCount(board.GetPieceBitboard(PieceType.Bishop, board.IsWhiteToMove)) * 3 +
-                   BitOperations.PopCount(board.GetPieceBitboard(PieceType.Rook, board.IsWhiteToMove))   * 5 +
-                   BitOperations.PopCount(board.GetPieceBitboard(PieceType.Queen, board.IsWhiteToMove))  * 9;
+            int Difference(PieceType pieceType)
+            {
+                return BitOperations.PopCount(board.GetPieceBitboard(pieceType, isWhite)) -
+                       BitOperations.PopCount(board.GetPieceBitboard(pieceType, isBlack));
+            }
         }
+        
+        return bestMove;
     }
+    
 }
