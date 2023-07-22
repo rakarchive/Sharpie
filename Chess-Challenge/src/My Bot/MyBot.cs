@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Numerics;
 using ChessChallenge.API;
-using ChessChallenge.Application.APIHelpers;
 
 public class MyBot : IChessBot
 {
@@ -13,28 +12,34 @@ public class MyBot : IChessBot
         int timeToUse = timer.MillisecondsRemaining / 20;
         for (int depth = 1; timer.MillisecondsElapsedThisTurn < timeToUse; depth++) {
             try {
-                Negamax(0, depth, -INF, +INF);
+                Search(0, depth, -INF, +INF);
             } catch {
                 break;
             }
         }
 
-        int Negamax(int ply, int depth, int alpha, int beta)
+        int Search(int ply, int depth, int alpha, int beta, bool quiescence = false)
         {
             if (timer.MillisecondsElapsedThisTurn >= timeToUse)
                 throw new TimeoutException();
             
             if (board.IsDraw()) return 0;
-            if (depth <= 0) return Evaluate();
+            if (!quiescence && depth <= 0) return Search(ply, depth, alpha, beta, true); 
 
-            Move[] moves = board.GetLegalMoves();
-            if (moves.Length == 0) return board.IsInCheck() ? -INF + ply : 0;
+            Move[] moves = board.GetLegalMoves(quiescence);
+            if (!quiescence && moves.Length == 0) return -INF + ply;
 
-            int  bestEvaluation  = -INF         ;
+            int bestEvaluation = -INF;
+            if (quiescence) {
+                bestEvaluation = Evaluate();
+                if (bestEvaluation >= beta) return bestEvaluation;
+                alpha = Math.Max(alpha, bestEvaluation);
+            }
+            
             Move currentBestMove = Move.NullMove;
             foreach (Move move in moves) {
                 board.MakeMove(move);
-                int evaluation = -Negamax(ply + 1, depth - 1, -beta, -alpha);
+                int evaluation = -Search(ply + 1, depth - 1, -beta, -alpha, quiescence);
                 board.UndoMove(move);
                 
                 if (evaluation <= bestEvaluation) continue;
@@ -44,7 +49,7 @@ public class MyBot : IChessBot
                 if (evaluation <= alpha) continue;
                 alpha = evaluation;
                 
-                if (evaluation > beta) break;
+                if (evaluation >= beta) break;
             }
             
             if (ply == 0) bestMove = currentBestMove;
