@@ -3,8 +3,8 @@ using ChessChallenge.API;
 
 public class MyBot : IChessBot
 {
-    
-    public static readonly long[] pst =
+
+    private static readonly long[] pst =
     {
         28147927174348900,    23925905605394510,    28992364991545432,    32933027548889163, 
         34621903179415629,    46444041180348496,    47288766758781017,    28147927174348900, 
@@ -78,7 +78,7 @@ public class MyBot : IChessBot
                 if (!piece.IsWhite) mirroredSquare ^= 56;
                 if ((sq & 4) != 0) mirroredSquare ^= 7;
                 // WARNING: DO NOT TOUCH THE FORMULA
-                long value = (pst[((int)piece.PieceType - 1) * 8 + (mirroredSquare >> 3)] >> ((mirroredSquare & 3) * 16)) & 32767;
+                long value = pst[((int)piece.PieceType - 1) * 8 + (mirroredSquare >> 3)] >> (mirroredSquare & 3) * 16 & 32767;
                 if (piece.IsWhite == board.IsWhiteToMove) result += value;
                 else result -= value;
             }
