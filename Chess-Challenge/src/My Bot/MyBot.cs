@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime;
 using System.Numerics;
 using ChessChallenge.API;
 
@@ -15,6 +16,8 @@ public class MyBot : IChessBot
         private Board board;
         private Timer timer;
 
+        private Int32 timeToUse;
+
         private Move overallBestMove;
         private Int32 overallBestScore;
         
@@ -28,12 +31,29 @@ public class MyBot : IChessBot
 
         public Move Search()
         {
-            Negamax(0, 4, -EVAL_INF, EVAL_INF);
-            return overallBestMove;
+            Move bestMove = Move.NullMove;
+            timeToUse = timer.MillisecondsRemaining / 20;
+            for (Int32 depth = 1; timer.MillisecondsElapsedThisTurn < timeToUse; depth++)
+            {
+                try
+                {
+                    Negamax(0, depth, -EVAL_INF, EVAL_INF);
+                }
+                catch
+                {
+                    break;
+                }
+
+                bestMove = overallBestMove;
+            }
+            return bestMove;
         }
         
         public Int32 Negamax(Int32 plys, Int32 depth, Int32 alpha, Int32 beta)
         {
+            if (timer.MillisecondsElapsedThisTurn >= timeToUse)
+                throw new System.TimeoutException();
+            
             if (board.IsInCheckmate()) return -EVAL_INF + plys;
             if (board.IsDraw()) return 0;
             if (depth <= 0) return Evaluate();
