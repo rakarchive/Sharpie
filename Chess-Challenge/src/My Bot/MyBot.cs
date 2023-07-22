@@ -30,22 +30,24 @@ public class MyBot : IChessBot
             Move[] moves = board.GetLegalMoves();
             if (moves.Length == 0) return board.IsInCheck() ? -INF + ply : 0;
 
-            int bestEvaluation = -INF;
+            int  bestEvaluation  = -INF         ;
+            Move currentBestMove = Move.NullMove;
             foreach (Move move in moves) {
                 board.MakeMove(move);
                 int evaluation = -Negamax(ply + 1, depth - 1, -beta, -alpha);
                 board.UndoMove(move);
                 
                 if (evaluation <= bestEvaluation) continue;
-                bestEvaluation = evaluation;
+                bestEvaluation  = evaluation;
+                currentBestMove = move;
                 
                 if (evaluation <= alpha) continue;
                 alpha = evaluation;
-
-                if (ply == 0) bestMove = move;
                 
                 if (evaluation > beta) break;
             }
+            
+            if (ply == 0) bestMove = currentBestMove;
             
             return bestEvaluation;
         }
