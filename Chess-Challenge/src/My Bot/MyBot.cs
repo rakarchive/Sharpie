@@ -10,7 +10,7 @@ public class MyBot : IChessBot
         const int INF = int.MaxValue - 1;
 
         Move bestMove = Move.NullMove;
-        int timeToUse = timer.MillisecondsRemaining / 20;
+        int timeToUse = Math.Min(timer.MillisecondsRemaining / 25 + 70, timer.MillisecondsRemaining);
         for (int depth = 1; timer.MillisecondsElapsedThisTurn < timeToUse; depth++) {
             try {
                 Negamax(0, depth, -INF, +INF);
@@ -44,7 +44,7 @@ public class MyBot : IChessBot
                 if (evaluation <= alpha) continue;
                 alpha = evaluation;
                 
-                if (evaluation > beta) break;
+                if (evaluation >= beta) break;
             }
             
             if (ply == 0) bestMove = currentBestMove;

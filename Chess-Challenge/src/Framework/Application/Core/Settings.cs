@@ -6,8 +6,9 @@ namespace ChessChallenge.Application
     {
         public const string Version = "1.1";
 
-        public const int GameDurationMilliseconds = 60 * 1000;
+        public const int GameDurationMilliseconds = 10 * 1000;
         public const float MinMoveDelay = 0;
+        public const double TimeIncrement = 0.1;
         public static readonly bool RunBotsOnSeparateThread = true;
 
         public const int MaxTokenCount = 1024;

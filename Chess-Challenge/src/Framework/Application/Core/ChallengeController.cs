@@ -182,6 +182,7 @@ namespace ChessChallenge.Application
                     OnMoveChosen(move);
                 }
             }
+            PlayerToMove.UpdateClock(-TimeIncrement);
         }
 
         void SetBoardPerspective()
