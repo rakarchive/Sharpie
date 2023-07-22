@@ -9,10 +9,10 @@ public class MyBot : IChessBot
         const int INF = int.MaxValue - 1;
 
         Move bestMove = Move.NullMove;
-        int timeToUse = Math.Min(timer.MillisecondsRemaining / 25 + 70, timer.MillisecondsRemaining);
+        int timeToUse = timer.MillisecondsRemaining / 20 + 75;
         for (int depth = 1; timer.MillisecondsElapsedThisTurn < timeToUse; depth++) {
             try {
-                Search(0, depth, -INF, +INF);
+                Search(0, depth, -INF, INF);
             } catch {
                 break;
             }
@@ -22,12 +22,11 @@ public class MyBot : IChessBot
         {
             if (timer.MillisecondsElapsedThisTurn >= timeToUse)
                 throw new TimeoutException();
-            
-            if (board.IsDraw()) return 0;
-            if (!quiescence && depth <= 0) return Search(ply, depth, alpha, beta, true); 
+
+            if (!quiescence && depth <= 0) return Search(ply, depth, alpha, beta, true);
 
             Move[] moves = board.GetLegalMoves(quiescence);
-            if (!quiescence && moves.Length == 0) return -INF + ply;
+            if (!quiescence && moves.Length == 0) return board.IsInCheck() ? -INF + ply : 0;
 
             int bestEvaluation = -INF;
             if (quiescence) {
@@ -59,8 +58,8 @@ public class MyBot : IChessBot
 
         int Evaluate()
         {
-            bool isWhite = board.IsWhiteToMove;
-            bool isBlack = !isWhite           ;
+            bool  stm = board.IsWhiteToMove;
+            bool nstm = !stm               ;
             return Difference(PieceType.Pawn  ) +
                    Difference(PieceType.Knight) * 3 +
                    Difference(PieceType.Bishop) * 3 +
@@ -69,8 +68,8 @@ public class MyBot : IChessBot
 
             int Difference(PieceType pieceType)
             {
-                return BitOperations.PopCount(board.GetPieceBitboard(pieceType, isWhite)) -
-                       BitOperations.PopCount(board.GetPieceBitboard(pieceType, isBlack));
+                return BitOperations.PopCount(board.GetPieceBitboard(pieceType,  stm)) -
+                       BitOperations.PopCount(board.GetPieceBitboard(pieceType, nstm));
             }
         }
         
