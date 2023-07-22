@@ -1,11 +1,11 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-int result[192];
-int base[6] = {
-	100, 300, 310, 500, 900, 0
+int64_t result[192];
+int64_t base[6] = {
+	100, 300, 310, 500, 900, 1000
 };
-int pst[6][64] = {
+int64_t pst[6][64] = {
 	// PAWN
 	{
 		  0,   0,   0,   0,   0,   0,   0,   0,
@@ -93,8 +93,9 @@ int main() {
 
 
 	for (int i = 0; i < 192; i++) {
-		cout << setw(4) << result[i] << ", ";
-		if (i % 16 == 15) cout << "\n";
+		if (i % 16 == 0) cout << "\n";
+		int64_t x = result[i] | (result[i+1] << 16) | (result[i+2] << 32) | (result[i+3] << 48);
+		cout << setw(20) << x << ", ";
 	}
 	return 0;
 }
