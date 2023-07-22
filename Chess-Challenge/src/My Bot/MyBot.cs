@@ -47,6 +47,34 @@ public class MyBot : IChessBot
             }
             return bestMove;
         }
+
+        public Int32 QSearch(Int32 alpha, Int32 beta)
+        {
+
+            Int32 staticEval = Evaluate();
+
+            if (staticEval >= beta)
+                return beta;
+            if (staticEval > alpha)
+                alpha = staticEval;
+
+            Move[] moves = board.GetLegalMoves(true);
+
+            foreach (Move move in moves)
+            {
+                board.MakeMove(move);
+                Int32 score = -QSearch(-beta, -alpha);
+                board.UndoMove(move);
+
+                if (score > alpha)
+                    alpha = score;
+
+                if (score >= beta)
+                    break;
+            }
+
+            return alpha;
+        }
         
         public Int32 Negamax(Int32 plys, Int32 depth, Int32 alpha, Int32 beta)
         {
@@ -55,7 +83,7 @@ public class MyBot : IChessBot
             
             if (board.IsInCheckmate()) return -EVAL_INF + plys;
             if (board.IsDraw()) return 0;
-            if (depth <= 0) return Evaluate();
+            if (depth <= 0) return QSearch(alpha, beta);
 
             Int32 bestScore = -Int32.MaxValue + 1;
             Move bestMove = Move.NullMove;
@@ -92,7 +120,6 @@ public class MyBot : IChessBot
 
         public Int32 Evaluate()
         {
-
             return BitOperations.PopCount(board.GetPieceBitboard(PieceType.Pawn, board.IsWhiteToMove))       +
                    BitOperations.PopCount(board.GetPieceBitboard(PieceType.Knight, board.IsWhiteToMove)) * 3 +
                    BitOperations.PopCount(board.GetPieceBitboard(PieceType.Bishop, board.IsWhiteToMove)) * 3 +
