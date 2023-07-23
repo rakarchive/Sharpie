@@ -24,13 +24,13 @@ public class MyBot : IChessBot
     {
         var bestMove = Move.NullMove;
         var timeToUse = timer.MillisecondsRemaining / 25 + 70;
-        for (var depth = 1; timer.MillisecondsElapsedThisTurn < timeToUse && depth <= 64; depth++) {
-            try {
+        try
+        {
+            for (var depth = 1; timer.MillisecondsElapsedThisTurn < timeToUse && depth <= 64; depth++)
+            {
                 Negamax(0, depth, -2147483646, 2147483646);
-            } catch {
-                break;
             }
-        }
+        } catch {}
 
         int Negamax(int ply, int depth, int alpha, int beta)
         {
