@@ -74,7 +74,7 @@ public class MyBot : IChessBot
                 if (piece.PieceType != 0)
                 {
                     // WARNING: DO NOT TOUCH THE FORMULA
-                    long value = pst[((int)piece.PieceType - 1) * 8 + (sq ^ (piece.IsWhite ? 0 : 56)) / 8] >> (sq ^ (sq & 4) / 4 * 7) % 4 * 16 & 32767;
+                    long value = pst[((int)piece.PieceType - 1) * 8 + (piece.IsWhite ? sq : sq ^ 56) / 8] >> (sq ^ (sq & 4) / 4 * 7) % 4 * 16 & 32767;
                     result += piece.IsWhite == board.IsWhiteToMove ? value : -value;
                 }
             }
