@@ -89,6 +89,9 @@ namespace ChessChallenge.Application
             {
                 string line = Console.ReadLine();
                 string[] tokens = line.Split(" ");
+                
+                if (tokens.Length == 0) continue;
+                
                 if (tokens[0] == "uci") {
                     Console.WriteLine("id name FindingChessBot");
                     Console.WriteLine("id author Sebastian Lague, Rak Laptudirm, Shaheryar Sohail, Balazs Szilagyi");
