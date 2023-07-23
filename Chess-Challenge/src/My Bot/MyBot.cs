@@ -22,9 +22,9 @@ public class MyBot : IChessBot
     
     public Move Think(Board board, Timer timer)
     {
-        Move bestMove = Move.NullMove;
-        int timeToUse = timer.MillisecondsRemaining / 25 + 70;
-        for (int depth = 1; timer.MillisecondsElapsedThisTurn < timeToUse && depth <= 64; depth++) {
+        var bestMove = Move.NullMove;
+        var timeToUse = timer.MillisecondsRemaining / 25 + 70;
+        for (var depth = 1; timer.MillisecondsElapsedThisTurn < timeToUse && depth <= 64; depth++) {
             try {
                 Negamax(0, depth, -2147483646, 2147483646);
             } catch {
@@ -40,14 +40,14 @@ public class MyBot : IChessBot
             if (ply != 0 && board.IsDraw()) return 0;
             if (depth <= 0) return Evaluate();
 
-            Move[] moves = board.GetLegalMoves();
+            var moves = board.GetLegalMoves();
             if (moves.Length == 0) return board.IsInCheck() ? -2147483646 + ply : 0;
 
-            int  bestEvaluation  = -2147483646  ;
-            Move currentBestMove = Move.NullMove;
-            foreach (Move move in moves) {
+            var  bestEvaluation  = -2147483646  ;
+            var currentBestMove = Move.NullMove;
+            foreach (var move in moves) {
                 board.MakeMove(move);
-                int evaluation = -Negamax(ply + 1, depth - 1, -beta, -alpha);
+                var evaluation = -Negamax(ply + 1, depth - 1, -beta, -alpha);
                 board.UndoMove(move);
                 
                 if (evaluation <= bestEvaluation) continue;
@@ -67,9 +67,9 @@ public class MyBot : IChessBot
         int Evaluate()
         {
             long result = 0;
-            for (int sq = 0; sq < 64; sq++)
+            for (var sq = 0; sq < 64; sq++)
             {
-                Piece piece = board.GetPiece(new Square(sq));
+                var piece = board.GetPiece(new Square(sq));
                 if (piece.PieceType != 0)
                 {
                     // Dear Programmer!
@@ -79,7 +79,7 @@ public class MyBot : IChessBot
                     // Now, only god knows!
                     //
                     // TLDR: DO NOT TOUCH THE FORMULA
-                    long value = pst[((int)piece.PieceType - 1) * 8 + (piece.IsWhite ? sq : sq ^ 56) / 8] >> (sq ^ (sq & 4) / 4 * 7) % 4 * 16 & 32767;
+                    var value = pst[((int)piece.PieceType - 1) * 8 + (piece.IsWhite ? sq : sq ^ 56) / 8] >> (sq ^ (sq & 4) / 4 * 7) % 4 * 16 & 32767;
                     result += piece.IsWhite == board.IsWhiteToMove ? value : -value;
                 }
             }
