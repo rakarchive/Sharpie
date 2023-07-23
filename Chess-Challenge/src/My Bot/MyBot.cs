@@ -23,7 +23,7 @@ public class MyBot : IChessBot
     public Move Think(Board board, Timer timer)
     {
         Move bestMove = Move.NullMove;
-        int timeToUse = Math.Min(timer.MillisecondsRemaining / 25 + 70, timer.MillisecondsRemaining);
+        int timeToUse = timer.MillisecondsRemaining / 25 + 70;
         for (int depth = 1; timer.MillisecondsElapsedThisTurn < timeToUse && depth <= 64; depth++) {
             try {
                 Negamax(0, depth, -2147483646, 2147483646);
@@ -73,7 +73,13 @@ public class MyBot : IChessBot
                 Piece piece = board.GetPiece(new Square(sq));
                 if (piece.PieceType != 0)
                 {
-                    // WARNING: DO NOT TOUCH THE FORMULA
+                    // Dear Programmer!
+                    // When I wrote this code, only god and I
+                    // knew how it worked.
+                    // 
+                    // Now, only god knows it!
+                    //
+                    // TLDR: DO NOT TOUCH THE FORMULA
                     long value = pst[((int)piece.PieceType - 1) * 8 + (piece.IsWhite ? sq : sq ^ 56) / 8] >> (sq ^ (sq & 4) / 4 * 7) % 4 * 16 & 32767;
                     result += piece.IsWhite == board.IsWhiteToMove ? value : -value;
                 }
