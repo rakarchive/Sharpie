@@ -26,7 +26,7 @@ public class MyBot : IChessBot
 
         Move bestMove = Move.NullMove;
         int timeToUse = Math.Min(timer.MillisecondsRemaining / 25 + 70, timer.MillisecondsRemaining);
-        for (int depth = 1; timer.MillisecondsElapsedThisTurn < timeToUse; depth++) {
+        for (int depth = 1; timer.MillisecondsElapsedThisTurn < timeToUse && depth <= 64; depth++) {
             try {
                 Negamax(0, depth, -INF, +INF);
             } catch {
@@ -39,7 +39,7 @@ public class MyBot : IChessBot
             if (timer.MillisecondsElapsedThisTurn >= timeToUse)
                 throw new TimeoutException();
             
-            if (board.IsDraw()) return 0;
+            if (ply != 0 && board.IsDraw()) return 0;
             if (depth <= 0) return Evaluate();
 
             Move[] moves = board.GetLegalMoves();

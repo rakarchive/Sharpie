@@ -63,7 +63,7 @@ namespace ChessChallenge.Application
             string windowButtonName = isBigWindow ? "Smaller Window" : "Bigger Window";
             if (NextButtonInRow(windowButtonName, ref buttonPos, spacing, buttonSize))
             {
-                Program.SetWindowSize(isBigWindow ? Settings.ScreenSizeSmall : Settings.ScreenSizeBig);
+                GuiProgram.SetWindowSize(isBigWindow ? Settings.ScreenSizeSmall : Settings.ScreenSizeBig);
             }
             if (NextButtonInRow("Exit (ESC)", ref buttonPos, spacing, buttonSize))
             {

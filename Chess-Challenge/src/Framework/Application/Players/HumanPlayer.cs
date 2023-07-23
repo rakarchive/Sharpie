@@ -36,7 +36,7 @@ namespace ChessChallenge.Application
         public void Update()
         {
             Vector2 mouseScreenPos = Raylib.GetMousePosition();
-            Vector2 mouseWorldPos = Program.ScreenToWorldPos(mouseScreenPos);
+            Vector2 mouseWorldPos = GuiProgram.ScreenToWorldPos(mouseScreenPos);
 
             if (LeftMousePressedThisFrame())
             {
