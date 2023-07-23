@@ -49,7 +49,7 @@ public class MyBot : IChessBot
 
             // Move Generation and Mate detection.
             var moves = board.GetLegalMoves();
-            if (moves.Length == 0) return board.IsInCheck() ? -2147483646 + ply : 0;
+            if (moves.Length == 0) return board.IsInCheck() ? ply - 2147483646 : 0;
 
             var bestScore= -2147483646;
             var bestMove = Move.NullMove;
