@@ -26,7 +26,7 @@ public class MyBot : IChessBot
         int timeToUse = Math.Min(timer.MillisecondsRemaining / 25 + 70, timer.MillisecondsRemaining);
         for (int depth = 1; timer.MillisecondsElapsedThisTurn < timeToUse && depth <= 64; depth++) {
             try {
-                Negamax(0, depth, -2147483646, +2147483646);
+                Negamax(0, depth, -2147483646, 2147483646);
             } catch {
                 break;
             }
@@ -75,7 +75,7 @@ public class MyBot : IChessBot
                 {
                     int mirroredSquare = sq;
                     mirroredSquare ^= piece.IsWhite ? 0 : 56;
-                    mirroredSquare ^= (sq & 4) / 4 * 7;
+                    mirroredSquare ^= (sq & 4) / 2 * 7;
                     // WARNING: DO NOT TOUCH THE FORMULA
                     long value = pst[((int)piece.PieceType - 1) * 8 + mirroredSquare / 8] >> mirroredSquare % 4 * 16 & 32767;
                     result += piece.IsWhite == board.IsWhiteToMove ? value : -value;
