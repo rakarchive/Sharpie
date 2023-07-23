@@ -73,14 +73,15 @@ public class MyBot : IChessBot
             for (int sq = 0; sq < 64; sq++)
             {
                 Piece piece = board.GetPiece(new Square(sq));
-                if (piece.PieceType == PieceType.None) continue;
-                int mirroredSquare = sq;
-                if (!piece.IsWhite) mirroredSquare ^= 56;
-                if ((sq & 4) != 0) mirroredSquare ^= 7;
-                // WARNING: DO NOT TOUCH THE FORMULA
-                long value = pst[((int)piece.PieceType - 1) * 8 + (mirroredSquare >> 3)] >> (mirroredSquare & 3) * 16 & 32767;
-                if (piece.IsWhite == board.IsWhiteToMove) result += value;
-                else result -= value;
+                if (piece.PieceType != PieceType.None)
+                {
+                    int mirroredSquare = sq;
+                    mirroredSquare ^= piece.IsWhite ? 0 : 56;
+                    mirroredSquare ^= (sq & 4) != 0 ? 7 : 0;
+                    // WARNING: DO NOT TOUCH THE FORMULA
+                    long value = pst[((int)piece.PieceType - 1) * 8 + mirroredSquare / 8] >> mirroredSquare % 4 * 16 & 32767;
+                    result += piece.IsWhite == board.IsWhiteToMove ? value : -value;
+                }
             }
             return (int)result;
         }
