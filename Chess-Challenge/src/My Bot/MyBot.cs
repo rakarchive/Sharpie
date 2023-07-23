@@ -75,7 +75,7 @@ public class MyBot : IChessBot
                 {
                     int mirroredSquare = sq;
                     mirroredSquare ^= piece.IsWhite ? 0 : 56;
-                    mirroredSquare ^= (sq & 4) / 2 * 7;
+                    mirroredSquare ^= (sq & 4) / 4 * 7;
                     // WARNING: DO NOT TOUCH THE FORMULA
                     long value = pst[((int)piece.PieceType - 1) * 8 + mirroredSquare / 8] >> mirroredSquare % 4 * 16 & 32767;
                     result += piece.IsWhite == board.IsWhiteToMove ? value : -value;
