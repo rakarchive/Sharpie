@@ -73,7 +73,7 @@ public class MyBot : IChessBot
             for (int sq = 0; sq < 64; sq++)
             {
                 Piece piece = board.GetPiece(new Square(sq));
-                if (piece.PieceType != PieceType.None)
+                if (piece.PieceType != 0)
                 {
                     int mirroredSquare = sq;
                     mirroredSquare ^= piece.IsWhite ? 0 : 56;
