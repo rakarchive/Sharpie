@@ -77,7 +77,7 @@ public class MyBot : IChessBot
                     // When I wrote this code, only god and I
                     // knew how it worked.
                     // 
-                    // Now, only god knows it!
+                    // Now, only god knows!
                     //
                     // TLDR: DO NOT TOUCH THE FORMULA
                     long value = pst[((int)piece.PieceType - 1) * 8 + (piece.IsWhite ? sq : sq ^ 56) / 8] >> (sq ^ (sq & 4) / 4 * 7) % 4 * 16 & 32767;
