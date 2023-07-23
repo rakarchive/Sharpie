@@ -22,13 +22,11 @@ public class MyBot : IChessBot
     
     public Move Think(Board board, Timer timer)
     {
-        const int INF = int.MaxValue - 1;
-
         Move bestMove = Move.NullMove;
         int timeToUse = Math.Min(timer.MillisecondsRemaining / 25 + 70, timer.MillisecondsRemaining);
         for (int depth = 1; timer.MillisecondsElapsedThisTurn < timeToUse && depth <= 64; depth++) {
             try {
-                Negamax(0, depth, -INF, +INF);
+                Negamax(0, depth, -2147483646, +2147483646);
             } catch {
                 break;
             }
@@ -43,9 +41,9 @@ public class MyBot : IChessBot
             if (depth <= 0) return Evaluate();
 
             Move[] moves = board.GetLegalMoves();
-            if (moves.Length == 0) return board.IsInCheck() ? -INF + ply : 0;
+            if (moves.Length == 0) return board.IsInCheck() ? -2147483646 + ply : 0;
 
-            int  bestEvaluation  = -INF         ;
+            int  bestEvaluation  = -2147483646  ;
             Move currentBestMove = Move.NullMove;
             foreach (Move move in moves) {
                 board.MakeMove(move);
