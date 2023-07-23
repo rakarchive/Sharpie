@@ -54,8 +54,7 @@ public class MyBot : IChessBot
                 bestEvaluation  = evaluation;
                 currentBestMove = move;
                 
-                if (evaluation <= alpha) continue;
-                alpha = evaluation;
+                alpha = Math.Max(evaluation, alpha);
                 
                 if (evaluation >= beta) break;
             }
