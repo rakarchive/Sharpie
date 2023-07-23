@@ -27,9 +27,7 @@ public class MyBot : IChessBot
         try
         {
             for (var depth = 1; timer.MillisecondsElapsedThisTurn < timeToUse && depth <= 64; depth++)
-            {
                 Negamax(0, depth, -2147483646, 2147483646);
-            }
         } catch {}
 
         int Negamax(int ply, int depth, int alpha, int beta)
