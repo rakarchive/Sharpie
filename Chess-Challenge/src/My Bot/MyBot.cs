@@ -18,12 +18,12 @@ public class MyBot : IChessBot
             }
         }
 
-        int Search(int ply, int depth, int alpha, int beta, bool quiescence = false)
+        int Search(int ply, int depth, int alpha, int beta)
         {
             if (timer.MillisecondsElapsedThisTurn >= timeToUse)
                 throw new TimeoutException();
 
-            if (!quiescence && depth <= 0) return Search(ply, depth, alpha, beta, true);
+            var quiescence = depth <= 0;
 
             Move[] moves = board.GetLegalMoves(quiescence);
             if (!quiescence && moves.Length == 0) return board.IsInCheck() ? -INF + ply : 0;
@@ -38,7 +38,7 @@ public class MyBot : IChessBot
             Move currentBestMove = Move.NullMove;
             foreach (Move move in moves) {
                 board.MakeMove(move);
-                int evaluation = -Search(ply + 1, depth - 1, -beta, -alpha, quiescence);
+                int evaluation = -Search(ply + 1, depth - 1, -beta, -alpha);
                 board.UndoMove(move);
                 
                 if (evaluation <= bestEvaluation) continue;
