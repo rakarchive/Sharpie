@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Transactions;
 using ChessChallenge.API;
 
 public class MyBot : IChessBot
@@ -24,6 +25,8 @@ public class MyBot : IChessBot
     {
         const int INF = int.MaxValue - 1;
 
+        ulong nodes = 0;
+
         Move bestMove = Move.NullMove;
         int timeToUse = timer.MillisecondsRemaining / 20 + 75;
         for (int depth = 1; timer.MillisecondsElapsedThisTurn < timeToUse; depth++) {
@@ -36,13 +39,10 @@ public class MyBot : IChessBot
 
         int Search(int ply, int depth, int alpha, int beta, bool quiescence = false)
         {
-            if (timer.MillisecondsElapsedThisTurn >= timeToUse)
+            if ((nodes & 4095) == 0 && timer.MillisecondsElapsedThisTurn >= timeToUse)
                 throw new TimeoutException();
 
             if (!quiescence && depth <= 0) return Search(ply, depth, alpha, beta, true);
-
-            Move[] moves = board.GetLegalMoves(quiescence);
-            if (!quiescence && moves.Length == 0) return board.IsInCheck() ? -INF + ply : 0;
 
             int bestEvaluation = -INF;
             if (quiescence) {
@@ -51,9 +51,13 @@ public class MyBot : IChessBot
                 alpha = Math.Max(alpha, bestEvaluation);
             }
             
+            Move[] moves = board.GetLegalMoves(quiescence);
+            if (!quiescence && moves.Length == 0) return board.IsInCheck() ? -INF + ply : 0;
+            
             Move currentBestMove = Move.NullMove;
             foreach (Move move in moves) {
                 board.MakeMove(move);
+                nodes++;
                 int evaluation = -Search(ply + 1, depth - 1, -beta, -alpha, quiescence);
                 board.UndoMove(move);
                 
