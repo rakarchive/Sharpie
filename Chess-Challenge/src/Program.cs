@@ -23,7 +23,13 @@ namespace ChessChallenge
             }
             else
             {
-                UciProgram uci = new UciProgram();
+                // Make sure we always flush:
+                Console.Out.Flush();
+                StreamWriter standardOutput = new(Console.OpenStandardOutput());
+                standardOutput.AutoFlush = true;
+                Console.SetOut(standardOutput);
+                
+                UciProgram uci = new();
                 uci.Start();
             }
         }
