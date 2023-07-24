@@ -84,7 +84,7 @@ public class MyBot : IChessBot
             for (var sq = 0; sq < 64; sq++)
             {
                 var piece = board.GetPiece(new Square(sq));
-                if (piece.PieceType != 0) continue;
+                if (piece.PieceType == 0) continue;
                 
                 // Dear Programmer!
                 // When I wrote this code, only god and I
