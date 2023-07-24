@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using ChessChallenge.API;
 
 public class MyBot : IChessBot
@@ -61,11 +62,13 @@ public class MyBot : IChessBot
             }
             
             // Generate all legal moves (or only capture moves if we're in quiescence).
-            var moves = board.GetLegalMoves(quiescence);
+            var moves = board.GetLegalMoves(quiescence)
+                .OrderByDescending(move => move.CapturePieceType)
+                .ThenBy(move => move.MovePieceType);
             
             // If we're not in quiescence and there are no legal moves, the game is over.
             // Return a mate score if we're in check, or a draw score if we're not (stalemate).
-            if (!quiescence && moves.Length == 0) return board.IsInCheck() ? -1000000 + ply : 0;
+            if (!quiescence && !moves.Any()) return board.IsInCheck() ? -1000000 + ply : 0;
             
             var currentBestMove = Move.NullMove;
             foreach (var move in moves) {
