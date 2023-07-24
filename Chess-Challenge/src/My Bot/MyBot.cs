@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Transactions;
 using ChessChallenge.API;
 
 public class MyBot : IChessBot
@@ -37,12 +36,12 @@ public class MyBot : IChessBot
             }
         }
 
-        int Search(int ply, int depth, int alpha, int beta, bool quiescence = false)
+        int Search(int ply, int depth, int alpha, int beta)
         {
             if ((nodes & 4095) == 0 && timer.MillisecondsElapsedThisTurn >= timeToUse)
                 throw new TimeoutException();
 
-            if (!quiescence && depth <= 0) return Search(ply, depth, alpha, beta, true);
+            var quiescence = depth <= 0;
 
             int bestEvaluation = -INF;
             if (quiescence) {
@@ -58,7 +57,7 @@ public class MyBot : IChessBot
             foreach (Move move in moves) {
                 board.MakeMove(move);
                 nodes++;
-                int evaluation = -Search(ply + 1, depth - 1, -beta, -alpha, quiescence);
+                int evaluation = -Search(ply + 1, depth - 1, -beta, -alpha);
                 board.UndoMove(move);
                 
                 if (evaluation <= bestEvaluation) continue;
