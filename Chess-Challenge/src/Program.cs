@@ -15,8 +15,8 @@ namespace ChessChallenge
         
         public static void Main(string[] args)
         {
-            Console.WriteLine("FindingChessBot by Sebastian Lague, Rak Laptudirm, Shaheryar Sohail, Balazs Szilagyi");
-            Console.WriteLine($"Token count: {CountTokens()}");
+            Console.Error.WriteLine("FindingChessBot by Sebastian Lague, Rak Laptudirm, Shaheryar Sohail, Balazs Szilagyi");
+            Console.Error.WriteLine($"Token count: {CountTokens()}");
             if (args.Length == 1 && args[0] == "gui")
             {
                 GuiProgram.Start();
