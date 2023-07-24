@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 
 namespace ChessChallenge.Application
 {
-    static class Program
+    static class GuiProgram
     {
         const bool hideRaylibLogs = true;
         static Camera2D cam;
 
-        public static void Main()
+        public static void Start()
         {
             Vector2 loadedWindowSize = GetSavedWindowSize();
             int screenWidth = (int)loadedWindowSize.X;
@@ -104,10 +104,5 @@ namespace ChessChallenge.Application
             bool isBigWindow = Raylib.GetScreenWidth() > Settings.ScreenSizeSmall.X;
             File.WriteAllText(FileHelper.PrefsFilePath, isBigWindow ? "1" : "0");
         }
-
-      
-
     }
-
-
 }
