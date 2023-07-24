@@ -8,79 +8,100 @@ public class MyBot : IChessBot
     // Refer to the generation script for details on it's internals.
     private static readonly long[] pst =
     {
-         28147927174348900,    23925905605394510,    28992364991545432,    32933027548889163,
-         34621903179415629,    46444041180348496,    47288766758781017,    28147927174348900,
-         79658586658636053,    84162383854829849,    89791879096631580,    92325162476699940,
-         94858652015264066,   108088233622307160,    90917972275822875,   101613338489585857,
-         83599348001079585,    89228989273932087,    91199339879727424,    96828774988906810,
-         97673307293024564,    97110413176144180,    95703076946051335,    80221519434547502,
-        145243265561461210,   140458208139280813,   141584060801548755,   143272880597762525,
-        147495185636131296,   145524903753351684,   163257921773109792,   158472598061253151,
-        249109112542266194,   255583208807138181,   251923978276438921,   252768377436046209,
-        253049942606742405,   261494359414997949,   248827989756740538,   269938557176447921,
-        283730951299662838,   269375779026043888,   269094243918218189,   268531233834075061,
-        273034915067069380,   275849797980521426,   279227454747444171,   265716527018935285,
+         28147927174348900,    23925905605394510,    28992364991545432,    32933027548889163, 
+         34621903179415629,    46444041180348496,    47288766758781017,    28147927174348900, 
+         79658586658636053,    84162383854829849,    89791879096631580,    92325162476699940, 
+         94858652015264066,   108088233622307160,    90917972275822875,   101613338489585857, 
+         83599348001079585,    89228989273932087,    91199339879727424,    96828774988906810, 
+         97673307293024564,    97110413176144180,    95703076946051335,    80221519434547502, 
+        145243265561461210,   140458208139280813,   141584060801548755,   143272880597762525, 
+        147495185636131296,   145524903753351684,   163257921773109792,   158472598061253151, 
+        249109112542266194,   255583208807138181,   251923978276438921,   252768377436046209, 
+        253049942606742405,   261494359414997949,   248827989756740538,   269938557176447921, 
+        283730951299662838,   269375779026043888,   269094243918218189,   268531233834075061, 
+        273034915067069380,   275849797980521426,   279227454747444171,   265716527018935285
     };
     
     public Move Think(Board board, Timer timer)
     {
-        var bestRootMove = Move.NullMove;
-        var timeToUse = timer.MillisecondsRemaining / 25 + 70;
-        try
-        {
+        var bestMove = Move.NullMove;
+        var timeToUse = timer.MillisecondsRemaining / 20 + 75;
+
+        var nodes = 0UL;
+
+        try {
             // Main iterative deepening loop.
-            for (var depth = 1; timer.MillisecondsElapsedThisTurn < timeToUse && depth <= 64; depth++)
-                Negamax(0, depth, -2147483646, 2147483646);
-        } catch { /* Catch clause to catch timeout error. */}
+            for (var depth = 1; timer.MillisecondsElapsedThisTurn < timeToUse; depth++)
+                Search(0, depth, -1000000, 1000000);
+        } catch { /* Catch clause to catch timeout error. */ }
 
-        // Negamax search function.
-        int Negamax(int ply, int depth, int alpha, int beta)
+        // Alpha-Beta + QSearch (Negamax) search function.
+        int Search(int ply, int depth, int alpha, int beta)
         {
-            // Check if time has expired.
-            if (timer.MillisecondsElapsedThisTurn >= timeToUse)
+            // Check if time has expired every 4096 nodes.
+            if ((nodes & 4095) == 0 && timer.MillisecondsElapsedThisTurn >= timeToUse)
                 throw new TimeoutException();
-            
-            // Various draw checks.
-            // TODO: Make this more efficient
-            if (ply != 0 && board.IsDraw()) return 0;
-            
-            // Horizon check.
-            if (depth <= 0) return Evaluate();
 
-            // Move Generation and Mate detection.
-            var moves = board.GetLegalMoves();
-            if (moves.Length == 0) return board.IsInCheck() ? ply - 2147483646 : 0;
+            // Check if we're in quiescence search so that we may avoid the horizon effect.
+            var quiescence = depth <= 0;
 
-            var bestScore= -2147483646;
-            var bestMove = Move.NullMove;
-            foreach (var move in moves) {
-                board.MakeMove(move);
-                var score = -Negamax(ply + 1, depth - 1, -beta, -alpha);
-                board.UndoMove(move);
+            // Set the best evaluation to the lowest possible value, or the evaluation of the position
+            // if we're in quiescence.
+            var bestEvaluation = -1000000;
+            if (quiescence) {
+                bestEvaluation = Evaluate();
                 
-                // Check if new best move has been found.
-                if (score <= bestScore) continue;
-                bestScore  = score;
-                bestMove = move;
+                // If we're in quiescence and the evaluation is too high, return it, as it is a branch guaranteed
+                // to be a winning.
+                if (bestEvaluation >= beta) return bestEvaluation;
                 
-                // Check if new best move raises alpha.
-                alpha = Math.Max(score, alpha);
-                
-                // Check for a beta cutoff.
-                if (score >= beta) break;
+                // If we're in quiescence and the evaluation is higher than alpha, set alpha to it as our lower bound
+                // cannot be lower than this.
+                alpha = Math.Max(alpha, bestEvaluation);
             }
             
-            // If this is the root negamax call, set the best root move on exit.
-            if (ply == 0) bestRootMove = bestMove;
+            // Generate all legal moves (or only capture moves if we're in quiescence).
+            var moves = board.GetLegalMoves(quiescence);
             
-            // Return the score of the current node, which is the best move in it.
-            return bestScore;
+            // If we're not in quiescence and there are no legal moves, the game is over.
+            // Return a mate score if we're in check, or a draw score if we're not (stalemate).
+            if (!quiescence && moves.Length == 0) return board.IsInCheck() ? -1000000 + ply : 0;
+            
+            var currentBestMove = Move.NullMove;
+            foreach (var move in moves) {
+                board.MakeMove(move);
+                nodes++;
+                var evaluation = -Search(ply + 1, depth - 1, -beta, -alpha);
+                board.UndoMove(move);
+                
+                // Check if the evaluation is better than the current best evaluation.
+                if (evaluation <= bestEvaluation) continue;
+                
+                // If it is, then we have a new best evaluation and a new best move.
+                bestEvaluation  = evaluation;
+                currentBestMove = move;
+                
+                // Check if the evaluation is better than alpha.
+                if (evaluation <= alpha) continue;
+                
+                // If it is, then we have a new lower bound.
+                alpha = evaluation;
+                
+                // Check if the evaluation is better than beta, and if it is, then we have a beta cutoff.
+                if (evaluation >= beta) break;
+            }
+            
+            // If we're at the root, set the best move to the current best move.
+            if (ply == 0) bestMove = currentBestMove;
+            
+            // Return the best evaluation for this branch point.
+            return bestEvaluation;
         }
 
         // Evaluate statically evaluates the current position.
         int Evaluate()
         {
-            long result = 0;
+            var result = 0L;
             for (var sq = 0; sq < 64; sq++)
             {
                 var piece = board.GetPiece(new Square(sq));
@@ -100,7 +121,7 @@ public class MyBot : IChessBot
             return (int)result;
         }
 
-        return bestRootMove;
+        return bestMove;
     }
     
 }
