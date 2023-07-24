@@ -4,6 +4,8 @@ using ChessChallenge.API;
 public class MyBot : IChessBot
 {
 
+    // Compressed Piece-Square Tables.
+    // Refer to the generation script for details on it's internals.
     private static readonly long[] pst =
     {
          28147927174348900,    23925905605394510,    28992364991545432,    32933027548889163, 
@@ -22,74 +24,100 @@ public class MyBot : IChessBot
     
     public Move Think(Board board, Timer timer)
     {
-        const int INF = int.MaxValue - 1;
+        var bestMove = Move.NullMove;
+        var timeToUse = timer.MillisecondsRemaining / 20 + 75;
 
-        ulong nodes = 0;
+        var nodes = 0UL;
 
-        Move bestMove = Move.NullMove;
-        int timeToUse = timer.MillisecondsRemaining / 20 + 75;
-        for (int depth = 1; timer.MillisecondsElapsedThisTurn < timeToUse; depth++) {
-            try {
-                Search(0, depth, -INF, INF);
-            } catch {
-                break;
-            }
-        }
+        try {
+            // Main iterative deepening loop.
+            for (var depth = 1; timer.MillisecondsElapsedThisTurn < timeToUse; depth++)
+                Search(0, depth, -1000000, 1000000);
+        } catch { /* Catch clause to catch timeout error. */ }
 
+        // Alpha-Beta + QSearch (Negamax) search function.
         int Search(int ply, int depth, int alpha, int beta)
         {
+            // Check if time has expired every 4096 nodes.
             if ((nodes & 4095) == 0 && timer.MillisecondsElapsedThisTurn >= timeToUse)
                 throw new TimeoutException();
 
+            // Check if we're in quiescence search so that we may avoid the horizon effect.
             var quiescence = depth <= 0;
 
-            int bestEvaluation = -INF;
+            // Set the best evaluation to the lowest possible value, or the evaluation of the position
+            // if we're in quiescence.
+            var bestEvaluation = -1000000;
             if (quiescence) {
                 bestEvaluation = Evaluate();
+                
+                // If we're in quiescence and the evaluation is too high, return it, as it is a branch guaranteed
+                // to be a winning.
                 if (bestEvaluation >= beta) return bestEvaluation;
+                
+                // If we're in quiescence and the evaluation is higher than alpha, set alpha to it as our lower bound
+                // cannot be lower than this.
                 alpha = Math.Max(alpha, bestEvaluation);
             }
             
-            Move[] moves = board.GetLegalMoves(quiescence);
-            if (!quiescence && moves.Length == 0) return board.IsInCheck() ? -INF + ply : 0;
+            // Generate all legal moves (or only capture moves if we're in quiescence).
+            var moves = board.GetLegalMoves(quiescence);
             
-            Move currentBestMove = Move.NullMove;
-            foreach (Move move in moves) {
+            // If we're not in quiescence and there are no legal moves, the game is over.
+            // Return a mate score if we're in check, or a draw score if we're not (stalemate).
+            if (!quiescence && moves.Length == 0) return board.IsInCheck() ? -1000000 + ply : 0;
+            
+            var currentBestMove = Move.NullMove;
+            foreach (var move in moves) {
                 board.MakeMove(move);
                 nodes++;
-                int evaluation = -Search(ply + 1, depth - 1, -beta, -alpha);
+                var evaluation = -Search(ply + 1, depth - 1, -beta, -alpha);
                 board.UndoMove(move);
                 
+                // Check if the evaluation is better than the current best evaluation.
                 if (evaluation <= bestEvaluation) continue;
+                
+                // If it is, then we have a new best evaluation and a new best move.
                 bestEvaluation  = evaluation;
                 currentBestMove = move;
                 
+                // Check if the evaluation is better than alpha.
                 if (evaluation <= alpha) continue;
+                
+                // If it is, then we have a new lower bound.
                 alpha = evaluation;
                 
+                // Check if the evaluation is better than beta, and if it is, then we have a beta cutoff.
                 if (evaluation >= beta) break;
             }
             
+            // If we're at the root, set the best move to the current best move.
             if (ply == 0) bestMove = currentBestMove;
             
+            // Return the best evaluation for this branch point.
             return bestEvaluation;
         }
 
+        // Evaluate statically evaluates the current position.
         int Evaluate()
         {
-            long result = 0;
-            for (int sq = 0; sq < 64; sq++)
+            var result = 0L;
+            for (var sq = 0; sq < 64; sq++)
             {
-                Piece piece = board.GetPiece(new Square(sq));
-                if (piece.PieceType == PieceType.None) continue;
-                int mirroredSquare = sq;
-                if (!piece.IsWhite) mirroredSquare ^= 56;
-                if ((sq & 4) != 0) mirroredSquare ^= 7;
-                // WARNING: DO NOT TOUCH THE FORMULA
-                long value = pst[((int)piece.PieceType - 1) * 8 + (mirroredSquare >> 3)] >> (mirroredSquare & 3) * 16 & 32767;
-                if (piece.IsWhite == board.IsWhiteToMove) result += value;
-                else result -= value;
+                var piece = board.GetPiece(new Square(sq));
+                if (piece.PieceType == 0) continue;
+                
+                // Dear Programmer!
+                // When I wrote this code, only god and I
+                // knew how it worked.
+                // 
+                // Now, only god knows!
+                //
+                // TLDR: DO NOT TOUCH THE FORMULA
+                var value = pst[((int)piece.PieceType - 1) * 8 + (piece.IsWhite ? sq : sq ^ 56) / 8] >> (sq ^ (sq & 4) / 4 * 7) % 4 * 16 & 32767;
+                result += piece.IsWhite == board.IsWhiteToMove ? value : -value;
             }
+            
             return (int)result;
         }
 
