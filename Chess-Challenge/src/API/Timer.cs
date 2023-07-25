@@ -15,12 +15,26 @@ namespace ChessChallenge.API
 
         System.Diagnostics.Stopwatch sw;
         readonly int initialMillisRemaining;
+        private readonly int maxDepth;
 
         public Timer(int millisRemaining)
         {
             initialMillisRemaining = millisRemaining;
+            maxDepth = 64;
             sw = System.Diagnostics.Stopwatch.StartNew();
-
         }
+
+        public Timer(int millisRemaining, int depth)
+        {
+            initialMillisRemaining = millisRemaining;
+            maxDepth = depth;
+            sw = System.Diagnostics.Stopwatch.StartNew();
+        }
+
+        public bool Stop(int currentDepth, int timeLimit)
+        {
+            return currentDepth > maxDepth || MillisecondsElapsedThisTurn >= timeLimit;
+        }
+        
     }
 }

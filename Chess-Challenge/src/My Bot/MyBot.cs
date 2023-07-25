@@ -22,17 +22,21 @@ public class MyBot : IChessBot
         283730951299662838,   269375779026043888,   269094243918218189,   268531233834075061, 
         273034915067069380,   275849797980521426,   279227454747444171,   265716527018935285
     };
+
+    public ulong Nodes;
     
     public Move Think(Board board, Timer timer)
     {
         var bestMove = Move.NullMove;
         var timeToUse = timer.MillisecondsRemaining / 20 + 75;
 
-        var nodes = 0UL;
+        Nodes = 0;
 
         try {
             // Main iterative deepening loop.
-            for (var depth = 1; timer.MillisecondsElapsedThisTurn < timeToUse; depth++)
+            // NOTE: Replace !timer.Stop(depth, timeToUse) with: timer.MillisecondsElapsedThisTurn < timeToUse before
+            // submitting.
+            for (var depth = 1; !timer.Stop(depth, timeToUse); depth++)
                 Search(0, depth, -1000000, 1000000);
         } catch { /* Catch clause to catch timeout error. */ }
 
@@ -40,7 +44,7 @@ public class MyBot : IChessBot
         int Search(int ply, int depth, int alpha, int beta)
         {
             // Check if time has expired every 4096 nodes.
-            if ((nodes & 4095) == 0 && timer.MillisecondsElapsedThisTurn >= timeToUse)
+            if ((Nodes & 4095) == 0 && timer.MillisecondsElapsedThisTurn >= timeToUse)
                 throw new TimeoutException();
 
             // Check if we're in quiescence search so that we may avoid the horizon effect.
@@ -73,7 +77,7 @@ public class MyBot : IChessBot
             var currentBestMove = Move.NullMove;
             foreach (var move in moves) {
                 board.MakeMove(move);
-                nodes++;
+                Nodes++;
                 var evaluation = -Search(ply + 1, depth - 1, -beta, -alpha);
                 board.UndoMove(move);
                 
