@@ -131,8 +131,8 @@ public class MyBot : IChessBot
             // Now, only god knows!
             //
             // TLDR: DO NOT TOUCH THE FORMULA
-            return pst[((int)piece.PieceType - 1) * 8 + (piece.IsWhite ? sq : sq ^ 56) / 8 + offset] >>
-                (sq ^ (sq & 4) / 4 * 7) % 4 * 16 & 32767;
+            return (pst[((int)piece.PieceType - 1) * 8 + (piece.IsWhite ? sq : sq ^ 56) / 8 + offset] >>
+                (sq ^ (sq & 4) / 4 * 7) % 4 * 16 & 32767) * (piece.IsWhite == board.IsWhiteToMove ? 1 : -1);
         }
 
         // Evaluate statically evaluates the current position.
@@ -146,18 +146,8 @@ public class MyBot : IChessBot
 
                 phase += PieceWeights[(int)piece.PieceType];
 
-                var mgValue = GetValue(piece, sq, 0);
-                var egValue = GetValue(piece, sq, 48);
-                if (piece.IsWhite == board.IsWhiteToMove)
-                {
-                    mgResult += mgValue;
-                    egResult += egValue;
-                }
-                else
-                {
-                    mgResult -= mgValue;
-                    egResult -= egValue;
-                }
+                mgResult += GetValue(piece, sq, 0);
+                egResult += GetValue(piece, sq, 48);
             }
 
             return (int)(mgResult * phase + egResult * (24 - phase)) / 24;
