@@ -37,7 +37,7 @@ public class MyBot : IChessBot
 
     private static readonly long[] PieceWeights =
     {
-        0, 1, 2, 2, 4, 8, 0
+        0, 0, 1, 1, 2, 4, 0
     };
 
     public ulong Nodes;
@@ -160,7 +160,7 @@ public class MyBot : IChessBot
                 }
             }
 
-            return (int)(mgResult * phase + egResult * (64 - phase)) / 64;
+            return (int)(mgResult * phase + egResult * (24 - phase)) / 24;
         }
 
         return bestMove;
