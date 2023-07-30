@@ -122,19 +122,6 @@ public class MyBot : IChessBot
             return bestEvaluation;
         }
 
-        long GetValue(Piece piece, int sq, int offset)
-        {
-            // Dear Programmer!
-            // When I wrote this code, only god and I
-            // knew how it worked.
-            // 
-            // Now, only god knows!
-            //
-            // TLDR: DO NOT TOUCH THE FORMULA
-            return (pst[((int)piece.PieceType - 1) * 8 + (piece.IsWhite ? sq : sq ^ 56) / 8 + offset] >>
-                (sq ^ (sq & 4) / 4 * 7) % 4 * 16 & 32767) * (piece.IsWhite == board.IsWhiteToMove ? 1 : -1);
-        }
-
         // Evaluate statically evaluates the current position.
         int Evaluate()
         {
@@ -142,12 +129,26 @@ public class MyBot : IChessBot
             for (var sq = 0; sq < 64; sq++)
             {
                 var piece = board.GetPiece(new Square(sq));
-                if (piece.PieceType == 0) continue;
+                var pieceType = (int)piece.PieceType;
+                if (pieceType == 0) continue;
 
-                phase += PieceWeights[(int)piece.PieceType];
+                phase += PieceWeights[pieceType];
+                
+                long GetValue(int offset)
+                {
+                    // Dear Programmer!
+                    // When I wrote this code, only god and I
+                    // knew how it worked.
+                    // 
+                    // Now, only god knows!
+                    //
+                    // TLDR: DO NOT TOUCH THE FORMULA
+                    return (pst[(pieceType - 1) * 8 + (piece.IsWhite ? sq : sq ^ 56) / 8 + offset] >>
+                        (sq ^ (sq & 4) / 4 * 7) % 4 * 16 & 32767) * (piece.IsWhite == board.IsWhiteToMove ? 1 : -1);
+                }
 
-                mgResult += GetValue(piece, sq, 0);
-                egResult += GetValue(piece, sq, 48);
+                mgResult += GetValue(0);
+                egResult += GetValue(48);
             }
 
             return (int)(mgResult * phase + egResult * (24 - phase)) / 24;
