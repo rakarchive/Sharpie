@@ -81,7 +81,9 @@ public class MyBot : IChessBot
                 // cannot be lower than this.
                 alpha = Math.Max(alpha, bestEvaluation);
             }
-            
+
+            if (board.IsRepeatedPosition()) return 0;
+
             // Generate all legal moves (or only capture moves if we're in quiescence).
             var moves = board.GetLegalMoves(quiescence)
                 .OrderByDescending(move => move.CapturePieceType)
