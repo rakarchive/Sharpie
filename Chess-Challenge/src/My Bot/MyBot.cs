@@ -85,27 +85,44 @@ public class MyBot : IChessBot
             if (board.IsRepeatedPosition()) return 0;
 
             // Generate all legal moves (or only capture moves if we're in quiescence).
-            var moves = board.GetLegalMoves(quiescence)
-                .OrderByDescending(move => move.CapturePieceType)
-                .ThenBy(move => move.MovePieceType);
+            Span<Move> moves = stackalloc Move[256];
+            board.GetLegalMovesNonAlloc(ref moves, quiescence);
+            var moveN = moves.Length;
             
             // If we're not in quiescence and there are no legal moves, the game is over.
             // Return a mate score if we're in check, or a draw score if we're not (stalemate).
-            if (!quiescence && !moves.Any()) return board.IsInCheck() ? -1000000 + ply : 0;
-            
+            if (!quiescence && moveN == 0) return board.IsInCheck() ? -1000000 + ply : 0;
+
+            Span<int> values = stackalloc int[moveN];
+            for (int i = 0; i < moveN; i++)
+            {
+                var move = moves[i];
+                values[i] = 100 * (int)move.CapturePieceType - (int)move.MovePieceType;
+            }
+
             var currentBestMove = Move.NullMove;
-            foreach (var move in moves) {
-                board.MakeMove(move);
+            for (int i = 0; i < moveN; i++)
+            {
+                var bestIdx = i;
+                for (int j = i + 1; j < moveN; j++)
+                    if (values[j] > values[bestIdx])
+                        bestIdx = j;
+                
                 Nodes++;
+
+                (moves[i], moves[bestIdx], values[i], values[bestIdx]) =
+                    (moves[bestIdx], moves[i], values[bestIdx], values[i]);
+
+                board.MakeMove(moves[i]);
                 var evaluation = -Search(ply + 1, depth - 1, -beta, -alpha);
-                board.UndoMove(move);
+                board.UndoMove(moves[i]);
                 
                 // Check if the evaluation is better than the current best evaluation.
                 if (evaluation <= bestEvaluation) continue;
                 
                 // If it is, then we have a new best evaluation and a new best move.
                 bestEvaluation  = evaluation;
-                currentBestMove = move;
+                currentBestMove = moves[i];
                 
                 // Check if the evaluation is better than alpha.
                 if (evaluation <= alpha) continue;
