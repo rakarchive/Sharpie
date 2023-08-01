@@ -93,36 +93,29 @@ public class MyBot : IChessBot
             // Return a mate score if we're in check, or a draw score if we're not (stalemate).
             if (!quiescence && moveN == 0) return board.IsInCheck() ? -1000000 + ply : 0;
 
-            Span<int> values = stackalloc int[moveN];
-            for (int i = 0; i < moveN; i++)
+            int MoveValue(Move move)
             {
-                var move = moves[i];
-                values[i] = 100 * (int)move.CapturePieceType - (int)move.MovePieceType;
+                if (move.IsCapture) return 100 * (int)move.CapturePieceType - (int)move.MovePieceType;
+                return 0;
             }
+            
+            moves.Sort((move1, move2) => MoveValue(move2) - MoveValue(move1));
 
             var currentBestMove = Move.NullMove;
-            for (int i = 0; i < moveN; i++)
+            foreach (var move in moves)
             {
-                var bestIdx = i;
-                for (int j = i + 1; j < moveN; j++)
-                    if (values[j] > values[bestIdx])
-                        bestIdx = j;
-                
                 Nodes++;
-
-                (moves[i], moves[bestIdx], values[i], values[bestIdx]) =
-                    (moves[bestIdx], moves[i], values[bestIdx], values[i]);
-
-                board.MakeMove(moves[i]);
+                
+                board.MakeMove(move);
                 var evaluation = -Search(ply + 1, depth - 1, -beta, -alpha);
-                board.UndoMove(moves[i]);
+                board.UndoMove(move);
                 
                 // Check if the evaluation is better than the current best evaluation.
                 if (evaluation <= bestEvaluation) continue;
                 
                 // If it is, then we have a new best evaluation and a new best move.
                 bestEvaluation  = evaluation;
-                currentBestMove = moves[i];
+                currentBestMove = move;
                 
                 // Check if the evaluation is better than alpha.
                 if (evaluation <= alpha) continue;
